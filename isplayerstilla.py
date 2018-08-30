@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 TEMPLATE = """\
 <!doctype html>
 <html>
+<meta charset="utf8">
+<meta http-equiv="refresh" content="30">
 <title>Is {player_name} still a member of the {team_name}?</title>
 <body>
 <center>

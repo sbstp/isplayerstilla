@@ -9,22 +9,16 @@ TEMPLATE = """\
 <html>
 <meta charset="utf8">
 <meta http-equiv="refresh" content="30">
-<title>Is {player_name} still a member of the {team_name}?</title>
+<title>Is {player_name} still a member of the {original_team}?</title>
 <body>
 <center>
-<h1>Is {player_name} still a member of the {team_name}?</h1>
+<h1>Is {player_name} still a member of the {original_team}?</h1>
 <h1><a href="{player_url}" target="_blank">{answer}</a></h1>
 </center>
 <!-- https://github.com/sbstp/isplayerstilla -->
 </body>
 </html>
 """
-
-
-def get_team_url(doc):
-    h3 = doc.find("h3")
-    a = h3.find("a")
-    return a.attrs["href"]
 
 
 def get_player_name(doc):
@@ -36,14 +30,14 @@ def get_player_name(doc):
 def get_team_name(doc):
     h3 = doc.find("h3")
     a = h3.find("a")
-    return "".join(a.strings)
+    return "".join(a.strings).strip()
 
 
 if len(sys.argv) != 3:
     print("isplayerstilla <url> <html file>")
 
 output_path = Path(sys.argv[2])
-original_team_path = output_path.with_suffix(".slug")
+original_team_path = output_path.with_suffix(".id")
 original_team = None
 if original_team_path.exists():
     original_team = original_team_path.read_text().strip()
@@ -57,24 +51,25 @@ resp = requests.get(
 )
 
 doc = BeautifulSoup(resp.text, "html.parser")
-team_url = get_team_url(doc)
 player_name = get_player_name(doc)
 team_name = get_team_name(doc)
+# team_name = "Chicago Blackhawks" #  test purposes
 
 if original_team is None:
-    original_team_path.write_text(team_url)
+    original_team_path.write_text(team_name)
+    original_team = team_name
+
+
+if original_team == team_name:
     answer = "Yes"
 else:
-    if original_team == team_url:
-        answer = "Yes"
-    else:
-        answer = "No"
+    answer = "No, he's with the {team_name} now.".format(team_name=team_name)
 
 
 output_path.write_text(
     TEMPLATE.format(
         player_name=player_name,
-        team_name=team_name,
+        original_team=original_team,
         answer=answer,
         player_url=player_url,
     )
